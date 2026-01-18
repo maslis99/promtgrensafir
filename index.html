@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APLIKASI PROMT GREEN SAFIR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Marked for Markdown parsing if Gemini returns markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Custom Colors based on request */
+        :root {
+            --green-safir: #0f5132; /* Deep Emerald/Sapphire Green */
+            --green-safir-light: #157347;
+            --green-safir-dark: #0a3622;
+            --sun-yellow: #FFD700; /* Matahari Yellow */
+            --sun-yellow-hover: #ffea70;
+        }
+
+        body {
+            background-color: #f0fdf4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .bg-safir { background-color: var(--green-safir); }
+        .text-safir { color: var(--green-safir); }
+        .border-safir { border-color: var(--green-safir); }
+        
+        /* Button Hover Effects */
+        .btn-platform {
+            transition: all 0.3s ease;
+        }
+        .btn-platform:hover, .btn-main:hover {
+            background-color: var(--sun-yellow);
+            color: var(--green-safir-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .btn-active {
+            background-color: var(--sun-yellow);
+            color: var(--green-safir-dark);
+            font-weight: bold;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Glass effect for main frame */
+        .glass-frame {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--green-safir);
+            box-shadow: 0 10px 25px -5px rgba(15, 81, 50, 0.3);
+        }
+
+        /* Loading Animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--green-safir);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom Checkbox Style for Targets */
+        .target-checkbox:checked + div {
+            background-color: var(--green-safir-light);
+            color: white;
+            border-color: var(--green-safir-dark);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 bg-gradient-to-br from-emerald-100 to-teal-200">
+
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-safir drop-shadow-sm mb-2">
+                <i class="fa-solid fa-gem mr-2"></i>APLIKASI PROMT GREEN SAFIR
+            </h1>
+            <p class="text-emerald-700 font-medium">Buat Script Konten Affiliate Otomatis</p>
+        </div>
+
+        <!-- Platform Selection Buttons -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <button onclick="selectPlatform('TikTok')" id="btn-tiktok" class="btn-platform btn-active bg-safir text-white py-4 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <i class="fa-brands fa-tiktok text-2xl"></i>
+                <span class="font-medium">TikTok</span>
+            </button>
+            <button onclick="selectPlatform('Shopee')" id="btn-shopee" class="btn-platform bg-safir text-white py-4 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-2xl"></i>
+                <span class="font-medium">Shopee Video</span>
+            </button>
+            <button onclick="selectPlatform('IG/FB')" id="btn-igfb" class="btn-platform bg-safir text-white py-4 rounded-xl shadow-lg flex flex-col items-center justify-center gap-2">
+                <i class="fa-brands fa-instagram text-2xl"></i>
+                <span class="font-medium">IG / FB Reels</span>
+            </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            
+            <!-- LEFT COLUMN: INPUT FORM -->
+            <div class="glass-frame rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-safir mb-4 border-b-2 border-emerald-100 pb-2">
+                    <i class="fa-solid fa-sliders mr-2"></i>Spesifikasi Konten
+                </h2>
+
+                <form id="promptForm" onsubmit="event.preventDefault(); handleGenerate();">
+                    
+                    <!-- 1. Input Gambar -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">1. Upload Referensi Gambar</label>
+                        <div class="relative border-2 border-dashed border-emerald-300 rounded-lg p-4 bg-emerald-50 text-center hover:bg-emerald-100 transition cursor-pointer">
+                            <input type="file" id="productImage" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName()">
+                            <div id="fileLabel">
+                                <i class="fa-solid fa-cloud-arrow-up text-safir text-xl mb-1"></i>
+                                <p class="text-xs text-gray-500">Klik untuk upload foto produk</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Nama Produk -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">2. Nama Produk</label>
+                        <input type="text" id="productName" placeholder="Contoh: Traktor Mini 4WD" class="w-full p-2 rounded-lg border border-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                    </div>
+
+                    <!-- 3. Deskripsi Produk -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">3. Keunggulan / Deskripsi</label>
+                        <textarea id="productDesc" rows="3" placeholder="Contoh: Hemat bensin, kuat di tanjakan, mudah dioperasikan..." class="w-full p-2 rounded-lg border border-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"></textarea>
+                    </div>
+
+                    <!-- 4. Target Audience (MULTI SELECT) -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">4. Target Audience (Bisa Pilih > 1)</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Emak-emak" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Emak-emak</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Sosialita" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Sosialita</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Ibu-ibu Arisan" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Ibu Arisan</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Tamu Kondangan" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Kondangan</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Ibu-ibu Pengajian" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Ibu Pengajian</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Petani" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Petani</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="target" value="Orang Kantoran" class="target-checkbox hidden">
+                                <div class="px-3 py-2 border border-emerald-300 rounded-lg text-xs font-semibold text-center hover:bg-emerald-50 transition">Kantoran</div>
+                            </label>
+                        </div>
+                        <input type="text" id="customTargetInput" placeholder="Tambah target lain (opsional)..." class="mt-2 w-full p-2 rounded-lg border border-emerald-300 text-sm">
+                    </div>
+
+                    <!-- 5. Format Video (Scenes) -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">5. Jumlah Scene Video</label>
+                        <div class="flex items-center gap-4 bg-emerald-50 p-2 rounded-lg">
+                            <input type="range" id="sceneCount" min="3" max="5" value="3" class="w-full accent-emerald-700 cursor-pointer" oninput="document.getElementById('sceneValue').innerText = this.value + ' Scenes'">
+                            <span id="sceneValue" class="font-bold text-safir min-w-[70px]">3 Scenes</span>
+                        </div>
+                    </div>
+
+                    <!-- 6. Konten Script -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">6. Elemen Script</label>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center cursor-pointer p-2 rounded hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition">
+                                <input type="checkbox" id="checkVO" checked disabled class="accent-emerald-700 w-4 h-4 cursor-not-allowed opacity-70">
+                                <span class="ml-2 text-sm font-medium">Voice Over (Wajib)</span>
+                            </label>
+                            
+                            <!-- TEKS OVERLAY RESTORED -->
+                            <label class="flex items-center cursor-pointer p-2 rounded hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition">
+                                <input type="checkbox" id="checkText" class="accent-emerald-700 w-4 h-4">
+                                <span class="ml-2 text-sm font-medium">Teks Overlay (Centang jika ingin ada tulisan)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 7. Video Style -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">7. Gaya Video (Style)</label>
+                        <select id="videoStyle" class="w-full p-2 rounded-lg border border-emerald-300 bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="Soft Selling">Soft Selling / Bercerita</option>
+                            <option value="Hard Selling">Hard Selling / To the Point</option>
+                            <option value="Unboxing">Review Jujur / Unboxing</option>
+                            <option value="Cinematic">Cinematic / Estetik</option>
+                            <option value="Edukasi">Masalah & Solusi (Edukasi)</option>
+                            <option value="Komedi">Komedi / Lucu</option>
+                        </select>
+                    </div>
+
+                    <!-- ENGINE SELECTION -->
+                    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <label class="block text-sm font-bold text-safir mb-3">Pilih Engine Generator:</label>
+                        <div class="flex gap-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="engine" value="template" class="peer sr-only">
+                                <div class="p-3 rounded-lg border-2 border-gray-300 text-gray-500 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-100 peer-checked:text-emerald-800 transition-all">
+                                    <i class="fa-solid fa-layer-group mb-1 text-lg"></i><br>
+                                    <span class="text-xs font-bold">Template Engine</span>
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="engine" value="gemini" class="peer sr-only" checked>
+                                <div class="p-3 rounded-lg border-2 border-gray-300 text-gray-500 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-100 peer-checked:text-emerald-800 transition-all">
+                                    <i class="fa-solid fa-wand-magic-sparkles mb-1 text-lg"></i><br>
+                                    <span class="text-xs font-bold">Gemini AI Engine</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 8. Tombol Generate -->
+                    <button type="submit" class="btn-main w-full bg-safir text-white font-bold py-3 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-robot"></i>
+                        GENERATE SCRIPT OTOMATIS
+                    </button>
+                </form>
+            </div>
+
+            <!-- RIGHT COLUMN: RESULT -->
+            <div class="glass-frame rounded-2xl p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4 border-b-2 border-emerald-100 pb-2">
+                    <h2 class="text-xl font-bold text-safir">
+                        <i class="fa-solid fa-file-lines mr-2"></i>Hasil Skrip Profesional
+                    </h2>
+                    <button onclick="copyToClipboard()" class="text-sm bg-emerald-100 hover:bg-yellow-300 text-emerald-800 px-3 py-1 rounded-lg transition">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <div class="flex-grow bg-gray-50 border border-gray-200 rounded-xl p-4 relative overflow-auto custom-scrollbar">
+                    <!-- Result Container -->
+                    <div id="resultOutput" class="prose prose-sm max-w-none text-gray-700 font-sans">
+                        <p class="text-gray-400 italic text-center mt-10">
+                            Silakan isi detail produk di samping,<br>pilih engine, dan klik Generate.<br>
+                            Hasil skrip dengan <strong>Visual</strong> dan <strong>Voice Over</strong> (opsional Teks) akan muncul di sini.
+                        </p>
+                    </div>
+                    
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="hidden absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center rounded-xl z-10">
+                        <div class="loader mb-3"></div>
+                        <p class="text-emerald-800 font-bold animate-pulse">Menulis Skrip...</p>
+                        <p id="loadingStatus" class="text-xs text-gray-500 mt-1">Menghubungkan ke Engine...</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-xs text-yellow-800 flex items-start">
+                        <i class="fa-solid fa-lightbulb mr-2 mt-1"></i>
+                        <span><strong>Info:</strong> Skrip ini fokus pada <strong>Visual</strong> dan <strong>Voice Over</strong>. Teks Overlay hanya muncul jika Anda mencentang opsinya.</span>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const apiKey = ""; // Runtime Environment will provide this
+        let selectedPlatform = 'TikTok';
+
+        // --- UI Logic ---
+
+        function selectPlatform(platform) {
+            selectedPlatform = platform;
+            ['btn-tiktok', 'btn-shopee', 'btn-igfb'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('btn-active');
+                btn.classList.add('bg-safir');
+            });
+
+            let activeId = '';
+            if(platform === 'TikTok') activeId = 'btn-tiktok';
+            else if(platform === 'Shopee') activeId = 'btn-shopee';
+            else activeId = 'btn-igfb';
+
+            const activeBtn = document.getElementById(activeId);
+            activeBtn.classList.add('btn-active');
+            activeBtn.classList.remove('bg-safir');
+        }
+
+        function updateFileName() {
+            const fileInput = document.getElementById('productImage');
+            const label = document.getElementById('fileLabel');
+            if (fileInput.files.length > 0) {
+                label.innerHTML = `<i class="fa-solid fa-check text-green-600 text-xl mb-1"></i><p class="text-xs font-bold text-green-700">${fileInput.files[0].name}</p>`;
+            }
+        }
+
+        // --- GENERATION LOGIC ---
+
+        async function handleGenerate() {
+            const engine = document.querySelector('input[name="engine"]:checked').value;
+            const loader = document.getElementById('loadingIndicator');
+            const resultDiv = document.getElementById('resultOutput');
+            const loadingStatus = document.getElementById('loadingStatus');
+
+            // Collect Targets (Multi Select)
+            const checkedTargets = Array.from(document.querySelectorAll('input[name="target"]:checked')).map(cb => cb.value);
+            const customTarget = document.getElementById('customTargetInput').value;
+            if (customTarget) checkedTargets.push(customTarget);
+            
+            const finalTarget = checkedTargets.length > 0 ? checkedTargets.join(", ") : "Umum";
+
+            // Collect Data
+            const data = {
+                productName: document.getElementById('productName').value || "Produk",
+                productDesc: document.getElementById('productDesc').value || "Produk berkualitas tinggi",
+                target: finalTarget,
+                scenes: document.getElementById('sceneCount').value,
+                style: document.getElementById('videoStyle').value,
+                platform: selectedPlatform,
+                useVO: document.getElementById('checkVO').checked,
+                useText: document.getElementById('checkText').checked // Captured Text Checkbox
+            };
+
+            // Show Loader
+            loader.classList.remove('hidden');
+            resultDiv.innerHTML = ''; // Clear previous
+
+            try {
+                if (engine === 'template') {
+                    loadingStatus.innerText = "Menggunakan Template Engine...";
+                    await new Promise(r => setTimeout(r, 1000)); // Fake delay for UX
+                    const script = generateTemplateScript(data);
+                    resultDiv.innerHTML = formatScriptToHTML(script);
+                } else {
+                    loadingStatus.innerText = "Menghubungi Gemini AI...";
+                    const script = await generateGeminiScript(data);
+                    // Parse Markdown if Gemini returns markdown, otherwise plain text
+                    resultDiv.innerHTML = marked.parse(script); 
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="text-red-500 font-bold">Error: ${error.message}</div><div class="text-xs text-gray-500">Coba beralih ke Template Engine jika AI bermasalah.</div>`;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // --- 1. TEMPLATE ENGINE (Offline Fallback) - UPDATED VISUAL & TEXT LOGIC ---
+        function generateTemplateScript(data) {
+            let script = ``; 
+            
+            // Variasi Hook
+            const hooks = [
+                `Pernah gak sih ngerasa ribet sama urusan harian?`,
+                `Buat ${data.target} yang mau praktis, wajib liat ini.`,
+                `Stop buang waktu! Ada cara lebih gampang.`
+            ];
+            const hook = hooks[Math.floor(Math.random() * hooks.length)];
+
+            for (let i = 1; i <= data.scenes; i++) {
+                script += `**SCENE ${i}**\n`;
+                
+                // STRUKTUR LOGIC: Hook -> Problem/Solusi -> Benefit -> CTA Promo
+                let structureType = "";
+                let cameraShot = "";
+                let visualContent = "";
+                let voContent = "";
+                let textContent = "";
+
+                // Menentukan Struktur per Scene
+                if (i === 1) {
+                    structureType = "HOOK (Pancingan)";
+                    cameraShot = "Close-Up Wajah (Ekspresi Heran/Tertarik)";
+                    visualContent = `Talent muncul tiba-tiba dari samping layar atau Produk langsung diperlihatkan di depan kamera dengan transisi zoom cepat. Latar belakang blur.`;
+                    voContent = `"${hook} Kenalin, ${data.productName}."`;
+                    textContent = "SOLUSI BARU!";
+                } else if (i === data.scenes) {
+                    structureType = "CTA PROMO (Closing)";
+                    cameraShot = "Product Shot + Screenshot HP/Keranjang";
+                    visualContent = `Tangan talent menunjuk tegas ke arah sudut kiri bawah (posisi keranjang kuning) sambil memegang produk di tangan satunya.`;
+                    voContent = `"Stok terbatas banget. Amankan punyamu sekarang juga, klik keranjang kuning!"`;
+                    textContent = "CHECKOUT SEKARANG";
+                } else {
+                    // Scene tengah (2, 3, dst)
+                    if (i === 2) {
+                        structureType = "PROBLEM & SOLUSI";
+                        cameraShot = "Medium Shot (Menunjukkan Masalah & Produk)";
+                        visualContent = `Split screen (Layar Terbelah): Kiri menunjukkan cara lama yang ribet/susah, Kanan menunjukkan kemudahan pakai ${data.productName} dengan wajah tersenyum.`;
+                        voContent = `"Dulu sering banget kesel karena masalah lama. Tapi sejak pake ini, semua jadi beres."`;
+                        textContent = "ANTI RIBET";
+                    } else {
+                        structureType = "BENEFIT (Keunggulan)";
+                        cameraShot = "Detail Shot / Panning (Fokus Fitur)";
+                        visualContent = `Kamera bergerak perlahan (panning) menyusuri detail produk, memperlihatkan tekstur bahan dan kualitas build yang kokoh.`;
+                        voContent = `"Fitur ${data.productDesc.substring(0, 20)}... ini beneran premium dan ngebantu banget."`;
+                        textContent = "KUALITAS JUARA";
+                    }
+                }
+
+                // Append to Script
+                script += `- **Tipe:** ${structureType}\n`;
+                script += `- **Visual:** ${visualContent}\n`; 
+                script += `- **Kamera:** ${cameraShot}\n`; 
+                if (data.useVO) script += `- **Voice Over:** ${voContent}\n`;
+                // CONDITIONAL TEXT OVERLAY
+                if (data.useText) script += `- **Teks Overlay:** "${textContent}"\n`;
+                
+                script += `\n`;
+            }
+            
+            return script;
+        }
+
+        // --- 2. GEMINI AI ENGINE (Online) - UPDATED VISUAL & TEXT LOGIC ---
+        async function generateGeminiScript(data) {
+            // Build Text Instruction based on checkbox
+            let textInstruction = "";
+            if (data.useText) {
+                textInstruction = `3. **Teks Overlay:** Sertakan tulisan singkat dan padat yang muncul di layar (maksimal 3-4 kata) untuk memperkuat pesan VO.`;
+            } else {
+                textInstruction = `3. **Teks Overlay:** JANGAN sertakan teks/tulisan di layar.`;
+            }
+
+            const prompt = `
+                Bertindaklah sebagai Senior Video Director & Copywriter Profesional.
+                Tugas: Buatkan SKRIP VIDEO AFFILIATE yang High-Converting untuk ${data.platform}.
+                
+                Data Produk:
+                - Nama: ${data.productName}
+                - USP: ${data.productDesc}
+                - Target: ${data.target} (Bisa mencakup berbagai kalangan ini)
+                - Gaya: ${data.style}
+                
+                STRUKTUR WAJIB (Marketing Flow):
+                Scene 1: HOOK (Menarik perhatian dalam 3 detik pertama).
+                Scene Tengah: PROBLEM & SOLUSI + BENEFIT (Menjelaskan nilai produk).
+                Scene Akhir: CTA PROMO (Ajakan bertindak yang elegan, TANPA kata "Diskon 50%" atau "Murah banget").
+
+                INSTRUKSI FORMAT OUTPUT:
+                1. JANGAN TAMPILKAN JUDUL SKRIP.
+                2. JANGAN TAMPILKAN HASHTAG.
+                3. Langsung mulai dari "Scene 1".
+                4. Buat ${data.scenes} Scene. 
+                
+                Setiap scene HARUS mencakup elemen berikut:
+                1. **Visual:** Deskripsi SANGAT DETAIL tentang apa yang terjadi di layar (aksi talent, properti, latar belakang, pencahayaan).
+                2. **Kamera:** Rekomendasi angle/gerakan kamera (contoh: Close Up, Low Angle, Dolly Zoom, Panning).
+                3. **Voice Over:** Naskah ucap yang natural, persuasif, dan berkelas.
+                ${textInstruction}
+                
+                Gunakan Format Markdown yang rapi.
+            `;
+
+            try {
+                const response = await callGeminiAPI(prompt);
+                return response;
+            } catch (e) {
+                console.error(e);
+                throw new Error("Gagal terhubung dengan Gemini AI. Silakan coba lagi.");
+            }
+        }
+
+        async function callGeminiAPI(userQuery) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }]
+            };
+
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) throw new Error("Too Many Requests");
+                        throw new Error(`API Error: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respon dari AI.";
+                    
+                } catch (error) {
+                    if (i === 4) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        // Helper to format simple text to HTML (for Template Engine)
+        function formatScriptToHTML(text) {
+            // Basic formatting for the template string
+            return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        function copyToClipboard() {
+            const resultDiv = document.getElementById("resultOutput");
+            const range = document.createRange();
+            range.selectNode(resultDiv);
+            window.getSelection().removeAllRanges(); 
+            window.getSelection().addRange(range); 
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();
+            
+            const btn = document.querySelector('button[onclick="copyToClipboard()"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+            btn.classList.add('bg-yellow-300');
+            setTimeout(() => {
+                btn.innerHTML = originalContent;
+                btn.classList.remove('bg-yellow-300');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
