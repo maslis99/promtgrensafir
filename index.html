@@ -113,14 +113,27 @@
 
                 <form id="promptForm" onsubmit="event.preventDefault(); handleGenerate();">
                     
-                    <!-- 1. Input Gambar -->
+                    <!-- 1. Input Gambar (MULTI UPLOAD FIX WITH PREVIEW) -->
                     <div class="mb-4">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">1. Upload Referensi Gambar</label>
-                        <div class="relative border-2 border-dashed border-emerald-300 rounded-lg p-4 bg-emerald-50 text-center hover:bg-emerald-100 transition cursor-pointer">
-                            <input type="file" id="productImage" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName()">
-                            <div id="fileLabel">
-                                <i class="fa-solid fa-cloud-arrow-up text-safir text-xl mb-1"></i>
-                                <p class="text-xs text-gray-500">Klik untuk upload foto produk</p>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-semibold text-gray-700">1. Upload Referensi Gambar</label>
+                            <span id="fileCount" class="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full hidden">0/5</span>
+                        </div>
+                        
+                        <div id="dropZone" class="relative border-2 border-dashed border-emerald-300 rounded-lg p-4 bg-emerald-50 text-center hover:bg-emerald-100 transition cursor-pointer min-h-[140px] flex items-center justify-center">
+                            <!-- Input with multiple attribute -->
+                            <input type="file" id="productImage" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="updateFilePreview()">
+                            
+                            <!-- Initial Label -->
+                            <div id="fileLabel" class="pointer-events-none">
+                                <i class="fa-solid fa-images text-safir text-3xl mb-2 block"></i>
+                                <p class="text-sm text-gray-700 font-bold">Klik / Drag & Drop di sini</p>
+                                <p class="text-xs text-gray-500 mt-1">Bisa pilih hingga 5 gambar sekaligus</p>
+                            </div>
+
+                            <!-- Preview Container (Hidden initially) -->
+                            <div id="previewContainer" class="hidden absolute inset-0 w-full h-full p-2 grid grid-cols-5 gap-2 overflow-hidden pointer-events-none bg-white bg-opacity-90 rounded-lg">
+                                <!-- Thumbnails will be injected here -->
                             </div>
                         </div>
                     </div>
@@ -135,6 +148,16 @@
                     <div class="mb-4">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">3. Keunggulan / Deskripsi</label>
                         <textarea id="productDesc" rows="3" placeholder="Contoh: Hemat bensin, kuat di tanjakan, mudah dioperasikan..." class="w-full p-2 rounded-lg border border-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"></textarea>
+                    </div>
+
+                    <!-- NEW: OBJEK TAMBAHAN -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Tambahkan Objek Visual (Opsional)</label>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-cat text-emerald-600"></i>
+                            <input type="text" id="visualObjects" placeholder="Misal: Kucing, Anjing, Bunga, Mobil..." class="w-full p-2 rounded-lg border border-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition text-sm">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">*Objek ini akan dimasukkan ke dalam deskripsi visual video.</p>
                     </div>
 
                     <!-- 4. Target Audience (MULTI SELECT) -->
@@ -190,8 +213,6 @@
                                 <input type="checkbox" id="checkVO" checked disabled class="accent-emerald-700 w-4 h-4 cursor-not-allowed opacity-70">
                                 <span class="ml-2 text-sm font-medium">Voice Over (Wajib)</span>
                             </label>
-                            
-                            <!-- TEKS OVERLAY RESTORED -->
                             <label class="flex items-center cursor-pointer p-2 rounded hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition">
                                 <input type="checkbox" id="checkText" class="accent-emerald-700 w-4 h-4">
                                 <span class="ml-2 text-sm font-medium">Teks Overlay (Centang jika ingin ada tulisan)</span>
@@ -212,25 +233,22 @@
                         </select>
                     </div>
 
-                    <!-- ENGINE SELECTION -->
+                    <!-- ENGINE SELECTION (Gemini Removed) -->
                     <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <label class="block text-sm font-bold text-safir mb-3">Pilih Engine Generator:</label>
+                        <label class="block text-sm font-bold text-safir mb-3">Engine Generator:</label>
                         <div class="flex gap-4">
                             <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="engine" value="template" class="peer sr-only">
-                                <div class="p-3 rounded-lg border-2 border-gray-300 text-gray-500 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-100 peer-checked:text-emerald-800 transition-all">
+                                <input type="radio" name="engine" value="template" class="peer sr-only" checked>
+                                <div class="p-3 rounded-lg border-2 border-emerald-600 bg-emerald-100 text-emerald-800 transition-all text-center shadow-sm">
                                     <i class="fa-solid fa-layer-group mb-1 text-lg"></i><br>
-                                    <span class="text-xs font-bold">Template Engine</span>
-                                </div>
-                            </label>
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="engine" value="gemini" class="peer sr-only" checked>
-                                <div class="p-3 rounded-lg border-2 border-gray-300 text-gray-500 text-center peer-checked:border-emerald-600 peer-checked:bg-emerald-100 peer-checked:text-emerald-800 transition-all">
-                                    <i class="fa-solid fa-wand-magic-sparkles mb-1 text-lg"></i><br>
-                                    <span class="text-xs font-bold">Gemini AI Engine</span>
+                                    <span class="text-xs font-bold">Template Engine (Offline)</span>
                                 </div>
                             </label>
                         </div>
+                        <p class="text-[10px] text-emerald-700 mt-2 text-center">
+                            <i class="fa-solid fa-check-circle mr-1"></i>
+                            Gemini AI Dinonaktifkan. Mode Offline aktif.
+                        </p>
                     </div>
 
                     <!-- 8. Tombol Generate -->
@@ -256,8 +274,8 @@
                     <!-- Result Container -->
                     <div id="resultOutput" class="prose prose-sm max-w-none text-gray-700 font-sans">
                         <p class="text-gray-400 italic text-center mt-10">
-                            Silakan isi detail produk di samping,<br>pilih engine, dan klik Generate.<br>
-                            Hasil skrip dengan <strong>Visual</strong> dan <strong>Voice Over</strong> (opsional Teks) akan muncul di sini.
+                            Silakan isi detail produk di samping dan klik Generate.<br>
+                            Hasil skrip dengan <strong>Visual</strong> dan <strong>Voice Over</strong> akan muncul di sini.
                         </p>
                     </div>
                     
@@ -265,7 +283,7 @@
                     <div id="loadingIndicator" class="hidden absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center rounded-xl z-10">
                         <div class="loader mb-3"></div>
                         <p class="text-emerald-800 font-bold animate-pulse">Menulis Skrip...</p>
-                        <p id="loadingStatus" class="text-xs text-gray-500 mt-1">Menghubungkan ke Engine...</p>
+                        <p id="loadingStatus" class="text-xs text-gray-500 mt-1">Menggunakan Template Engine...</p>
                     </div>
                 </div>
 
@@ -281,8 +299,7 @@
     </div>
 
     <script>
-        // API Configuration
-        const apiKey = ""; // Runtime Environment will provide this
+        // API Key logic removed as Gemini is disabled
         let selectedPlatform = 'TikTok';
 
         // --- UI Logic ---
@@ -305,18 +322,60 @@
             activeBtn.classList.remove('bg-safir');
         }
 
-        function updateFileName() {
+        // --- NEW: UPDATE FILE PREVIEW (THUMBNAILS) ---
+        function updateFilePreview() {
             const fileInput = document.getElementById('productImage');
-            const label = document.getElementById('fileLabel');
-            if (fileInput.files.length > 0) {
-                label.innerHTML = `<i class="fa-solid fa-check text-green-600 text-xl mb-1"></i><p class="text-xs font-bold text-green-700">${fileInput.files[0].name}</p>`;
+            const labelDiv = document.getElementById('fileLabel');
+            const previewContainer = document.getElementById('previewContainer');
+            const fileCountSpan = document.getElementById('fileCount');
+            const files = fileInput.files;
+
+            // Reset
+            previewContainer.innerHTML = '';
+
+            if (files.length > 5) {
+                alert("Maksimal hanya boleh upload 5 gambar sekaligus!");
+                fileInput.value = ""; // Clear selection
+                
+                labelDiv.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+                fileCountSpan.classList.add('hidden');
+                return;
+            }
+
+            if (files.length > 0) {
+                // Update Badge
+                fileCountSpan.innerText = `${files.length}/5 Gambar`;
+                fileCountSpan.classList.remove('hidden');
+
+                // Hide default label
+                labelDiv.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+
+                // Generate Thumbnails
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = "relative rounded overflow-hidden border border-emerald-200 shadow-sm aspect-square bg-gray-100 flex items-center justify-center";
+                        div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">`;
+                        previewContainer.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                // Show default label if cancelled
+                labelDiv.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+                fileCountSpan.classList.add('hidden');
             }
         }
 
         // --- GENERATION LOGIC ---
 
         async function handleGenerate() {
-            const engine = document.querySelector('input[name="engine"]:checked').value;
+            // Force template engine
+            const engine = 'template'; 
             const loader = document.getElementById('loadingIndicator');
             const resultDiv = document.getElementById('resultOutput');
             const loadingStatus = document.getElementById('loadingStatus');
@@ -328,99 +387,112 @@
             
             const finalTarget = checkedTargets.length > 0 ? checkedTargets.join(", ") : "Umum";
 
+            // Count Images
+            const imgCount = document.getElementById('productImage').files.length;
+
             // Collect Data
             const data = {
                 productName: document.getElementById('productName').value || "Produk",
                 productDesc: document.getElementById('productDesc').value || "Produk berkualitas tinggi",
+                visualObj: document.getElementById('visualObjects').value || "", 
                 target: finalTarget,
                 scenes: document.getElementById('sceneCount').value,
                 style: document.getElementById('videoStyle').value,
                 platform: selectedPlatform,
                 useVO: document.getElementById('checkVO').checked,
-                useText: document.getElementById('checkText').checked // Captured Text Checkbox
+                useText: document.getElementById('checkText').checked,
+                imgCount: imgCount // Pass count to script
             };
 
             // Show Loader
             loader.classList.remove('hidden');
-            resultDiv.innerHTML = ''; // Clear previous
+            resultDiv.innerHTML = ''; 
 
             try {
-                if (engine === 'template') {
-                    loadingStatus.innerText = "Menggunakan Template Engine...";
-                    await new Promise(r => setTimeout(r, 1000)); // Fake delay for UX
-                    const script = generateTemplateScript(data);
-                    resultDiv.innerHTML = formatScriptToHTML(script);
-                } else {
-                    loadingStatus.innerText = "Menghubungi Gemini AI...";
-                    const script = await generateGeminiScript(data);
-                    // Parse Markdown if Gemini returns markdown, otherwise plain text
-                    resultDiv.innerHTML = marked.parse(script); 
-                }
+                // ALWAYS USE TEMPLATE ENGINE
+                loadingStatus.innerText = "Menggunakan Template Engine...";
+                await new Promise(r => setTimeout(r, 1000)); 
+                const script = generateTemplateScript(data);
+                resultDiv.innerHTML = formatScriptToHTML(script);
+                
             } catch (error) {
-                resultDiv.innerHTML = `<div class="text-red-500 font-bold">Error: ${error.message}</div><div class="text-xs text-gray-500">Coba beralih ke Template Engine jika AI bermasalah.</div>`;
+                resultDiv.innerHTML = `<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                    <strong><i class="fa-solid fa-triangle-exclamation"></i> Gagal:</strong> ${error.message}
+                </div>`;
             } finally {
                 loader.classList.add('hidden');
             }
         }
 
-        // --- 1. TEMPLATE ENGINE (Offline Fallback) - UPDATED VISUAL & TEXT LOGIC ---
+        // --- 1. TEMPLATE ENGINE (Offline) ---
         function generateTemplateScript(data) {
             let script = ``; 
             
-            // Variasi Hook
             const hooks = [
                 `Pernah gak sih ngerasa ribet sama urusan harian?`,
                 `Buat ${data.target} yang mau praktis, wajib liat ini.`,
                 `Stop buang waktu! Ada cara lebih gampang.`
             ];
             const hook = hooks[Math.floor(Math.random() * hooks.length)];
+            
+            // Helper untuk referensi visual tambahan
+            const visualObjText = data.visualObj ? ` (tampilkan bersama ${data.visualObj})` : "";
+            const totalImages = data.imgCount > 0 ? data.imgCount : 1; // Default 1 jika tidak ada upload
 
             for (let i = 1; i <= data.scenes; i++) {
                 script += `**SCENE ${i}**\n`;
                 
-                // STRUKTUR LOGIC: Hook -> Problem/Solusi -> Benefit -> CTA Promo
                 let structureType = "";
                 let cameraShot = "";
                 let visualContent = "";
                 let voContent = "";
                 let textContent = "";
 
-                // Menentukan Struktur per Scene
+                // KONSTRUKSI DEFAULT: HOOK -> DESKRIPSI -> CTA
+                
                 if (i === 1) {
+                    // --- SCENE 1: HOOK ---
                     structureType = "HOOK (Pancingan)";
-                    cameraShot = "Close-Up Wajah (Ekspresi Heran/Tertarik)";
-                    visualContent = `Talent muncul tiba-tiba dari samping layar atau Produk langsung diperlihatkan di depan kamera dengan transisi zoom cepat. Latar belakang blur.`;
-                    voContent = `"${hook} Kenalin, ${data.productName}."`;
+                    cameraShot = "Close-Up / Zoom In Cepat";
+                    // Gunakan Gambar 1
+                    visualContent = `Tampilkan **Foto ke-1** dari ${totalImages} gambar yang diupload. Efek muncul tiba-tiba (Pop-up) untuk menarik perhatian${visualObjText}.`;
+                    voContent = `"${hook} Kenalin nih, ${data.productName}."`;
                     textContent = "SOLUSI BARU!";
-                } else if (i === data.scenes) {
-                    structureType = "CTA PROMO (Closing)";
-                    cameraShot = "Product Shot + Screenshot HP/Keranjang";
-                    visualContent = `Tangan talent menunjuk tegas ke arah sudut kiri bawah (posisi keranjang kuning) sambil memegang produk di tangan satunya.`;
-                    voContent = `"Stok terbatas banget. Amankan punyamu sekarang juga, klik keranjang kuning!"`;
+
+                } else if (i === parseInt(data.scenes)) { // Pastikan ini scene terakhir
+                    // --- SCENE TERAKHIR: CTA ---
+                    structureType = "CTA (Keranjang Kuning)";
+                    cameraShot = "Wide Shot + Overlay Panah";
+                    // Gunakan kolase atau gambar terakhir
+                    visualContent = `Tangan talent menunjuk animasi panah ke sudut kiri bawah (Keranjang Kuning). Background: Kolase dari semua gambar yang diupload.`;
+                    voContent = `"Stok terbatas banget lho. Jangan nunggu habis, langsung klik keranjang kuning sekarang!"`;
                     textContent = "CHECKOUT SEKARANG";
+
                 } else {
-                    // Scene tengah (2, 3, dst)
+                    // --- SCENE TENGAH (SCENE 2, dst): DESKRIPSI ---
+                    structureType = "DESKRIPSI PRODUK";
+                    cameraShot = "Panning / Detail Shot";
+                    
+                    // Logika Visual: Jika ada foto ke-2, pakai foto ke-2, dst.
+                    let imgIndex = i;
+                    if (imgIndex > totalImages) imgIndex = totalImages; // Fallback jika scene lebih banyak dari gambar
+                    
+                    visualContent = `Tampilkan **Foto ke-${imgIndex}** (Detail Produk). Perlihatkan tekstur/bahan dan fitur unggulan secara jelas${visualObjText}.`;
+                    
+                    // Jika Scene 2, pakai full deskripsi. Jika scene 3 (tapi bukan terakhir), pecah kalimatnya.
                     if (i === 2) {
-                        structureType = "PROBLEM & SOLUSI";
-                        cameraShot = "Medium Shot (Menunjukkan Masalah & Produk)";
-                        visualContent = `Split screen (Layar Terbelah): Kiri menunjukkan cara lama yang ribet/susah, Kanan menunjukkan kemudahan pakai ${data.productName} dengan wajah tersenyum.`;
-                        voContent = `"Dulu sering banget kesel karena masalah lama. Tapi sejak pake ini, semua jadi beres."`;
-                        textContent = "ANTI RIBET";
+                        voContent = `"Liat deh keunggulannya. ${data.productDesc}"`;
                     } else {
-                        structureType = "BENEFIT (Keunggulan)";
-                        cameraShot = "Detail Shot / Panning (Fokus Fitur)";
-                        visualContent = `Kamera bergerak perlahan (panning) menyusuri detail produk, memperlihatkan tekstur bahan dan kualitas build yang kokoh.`;
-                        voContent = `"Fitur ${data.productDesc.substring(0, 20)}... ini beneran premium dan ngebantu banget."`;
-                        textContent = "KUALITAS JUARA";
+                        voContent = `"Gak cuma itu, ${data.productName} ini juga bikin aktivitas jadi lebih simpel."`;
                     }
+                    
+                    textContent = "KUALITAS JUARA";
                 }
 
-                // Append to Script
                 script += `- **Tipe:** ${structureType}\n`;
                 script += `- **Visual:** ${visualContent}\n`; 
                 script += `- **Kamera:** ${cameraShot}\n`; 
                 if (data.useVO) script += `- **Voice Over:** ${voContent}\n`;
-                // CONDITIONAL TEXT OVERLAY
                 if (data.useText) script += `- **Teks Overlay:** "${textContent}"\n`;
                 
                 script += `\n`;
@@ -429,92 +501,9 @@
             return script;
         }
 
-        // --- 2. GEMINI AI ENGINE (Online) - UPDATED VISUAL & TEXT LOGIC ---
-        async function generateGeminiScript(data) {
-            // Build Text Instruction based on checkbox
-            let textInstruction = "";
-            if (data.useText) {
-                textInstruction = `3. **Teks Overlay:** Sertakan tulisan singkat dan padat yang muncul di layar (maksimal 3-4 kata) untuk memperkuat pesan VO.`;
-            } else {
-                textInstruction = `3. **Teks Overlay:** JANGAN sertakan teks/tulisan di layar.`;
-            }
+        // --- GEMINI ENGINE REMOVED ---
 
-            const prompt = `
-                Bertindaklah sebagai Senior Video Director & Copywriter Profesional.
-                Tugas: Buatkan SKRIP VIDEO AFFILIATE yang High-Converting untuk ${data.platform}.
-                
-                Data Produk:
-                - Nama: ${data.productName}
-                - USP: ${data.productDesc}
-                - Target: ${data.target} (Bisa mencakup berbagai kalangan ini)
-                - Gaya: ${data.style}
-                
-                BAHASA: WAJIB BAHASA INDONESIA (Gunakan gaya bahasa yang sesuai target audience, misal: santai/gaul untuk remaja, sopan untuk orang tua).
-                
-                STRUKTUR WAJIB (Marketing Flow):
-                Scene 1: HOOK (Menarik perhatian dalam 3 detik pertama).
-                Scene Tengah: PROBLEM & SOLUSI + BENEFIT (Menjelaskan nilai produk).
-                Scene Akhir: CTA PROMO (Ajakan bertindak yang elegan, TANPA kata "Diskon 50%" atau "Murah banget").
-
-                INSTRUKSI FORMAT OUTPUT:
-                1. JANGAN TAMPILKAN JUDUL SKRIP.
-                2. JANGAN TAMPILKAN HASHTAG.
-                3. Langsung mulai dari "Scene 1".
-                4. Buat ${data.scenes} Scene. 
-                
-                Setiap scene HARUS mencakup elemen berikut:
-                1. **Visual:** Deskripsi SANGAT DETAIL tentang apa yang terjadi di layar (aksi talent, properti, latar belakang, pencahayaan).
-                2. **Kamera:** Rekomendasi angle/gerakan kamera (contoh: Close Up, Low Angle, Dolly Zoom, Panning).
-                3. **Voice Over:** Naskah ucap yang natural, persuasif, dan berkelas DALAM BAHASA INDONESIA.
-                ${textInstruction}
-                
-                Gunakan Format Markdown yang rapi.
-            `;
-
-            try {
-                const response = await callGeminiAPI(prompt);
-                return response;
-            } catch (e) {
-                console.error(e);
-                throw new Error("Gagal terhubung dengan Gemini AI. Silakan coba lagi.");
-            }
-        }
-
-        async function callGeminiAPI(userQuery) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }]
-            };
-
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            
-            for (let i = 0; i < 5; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 429) throw new Error("Too Many Requests");
-                        throw new Error(`API Error: ${response.statusText}`);
-                    }
-
-                    const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respon dari AI.";
-                    
-                } catch (error) {
-                    if (i === 4) throw error;
-                    await new Promise(resolve => setTimeout(resolve, delays[i]));
-                }
-            }
-        }
-
-        // Helper to format simple text to HTML (for Template Engine)
         function formatScriptToHTML(text) {
-            // Basic formatting for the template string
             return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         }
 
